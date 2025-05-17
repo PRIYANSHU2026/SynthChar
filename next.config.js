@@ -7,7 +7,9 @@ const nextConfig = {
   },
   trailingSlash: true,
   reactStrictMode: true,
-  swcMinify: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;

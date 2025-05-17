@@ -25,15 +25,18 @@ export default function Creator() {
   const mentors = [
     {
       name: "Dr. Abhiram Anand",
-      department: "Glass Expert, Dept. of Physics"
+      department: "Glass Expert, Associate Professor, Dept. of Physics",
+      image: "/images/mentors/Dr. Abhiram Anand.jpeg"
     },
     {
       name: "Dr. S Ambareesh",
-      department: "Dept. of AIML"
+      department: "Professor, Dept. of AIML",
+      image: "/images/mentors/Dr. S Ambareesh.jpg"
     },
     {
       name: "Dr. Hariharan N.",
-      department: "Dept. of Physics"
+      department: "Professor & Head of Dept. of Physics",
+      image: "/images/mentors/Dr. Hariharan N..jpeg"
     }
   ];
 
@@ -96,10 +99,12 @@ export default function Creator() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {mentors.map((mentor, index) => (
               <div key={index} className="flex flex-col items-center p-4 bg-white/50 rounded-lg shadow-sm">
-                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-4 border-green-100 shadow-md">
+                  <img
+                    src={mentor.image}
+                    alt={mentor.name}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
                 <h3 className="text-lg font-semibold text-center">{mentor.name}</h3>
                 <p className="text-sm text-gray-500 mt-1 text-center">{mentor.department}</p>
