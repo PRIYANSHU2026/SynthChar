@@ -205,7 +205,13 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     // Handle event objects (from input fields)
     let value: string | number;
     if (val && typeof val === 'object' && 'target' in val && val.target) {
-      value = field === "matrix" ? Number(val.target.value) : val.target.value;
+      if (field === "matrix") {
+        // Replace comma with dot for proper number parsing
+        const normalizedValue = val.target.value.replace(',', '.');
+        value = Number(normalizedValue);
+      } else {
+        value = val.target.value;
+      }
     } else {
       value = val as string | number;
     }
@@ -255,9 +261,13 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     // Handle event objects (from input fields)
     let value: string | number;
     if (val && typeof val === 'object' && 'target' in val && val.target) {
-      value = (field === "precursorMoles" || field === "productMoles")
-        ? Number(val.target.value)
-        : val.target.value;
+      if (field === "precursorMoles" || field === "productMoles") {
+        // Replace comma with dot for proper number parsing
+        const normalizedValue = val.target.value.replace(',', '.');
+        value = Number(normalizedValue);
+      } else {
+        value = val.target.value;
+      }
     } else {
       value = val as string | number;
     }
@@ -332,16 +342,11 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Matrix normalization
+  // Matrix validation
   const totalMatrix = components.reduce((acc, item) => acc + (Number(item.matrix) || 0), 0);
   useEffect(() => {
     if (Math.abs(totalMatrix - 100) > 0.001 && totalMatrix > 0) {
-      setWarning("Matrix values do not sum to 100%. They will be normalized (rescaled).");
-
-      setComponents((prev) => {
-        const factor = 100 / totalMatrix;
-        return prev.map((c) => ({ ...c, matrix: c.matrix * factor }));
-      });
+      setWarning("Matrix values do not sum to 100%. Please make total 100.");
     } else {
       setWarning("");
     }

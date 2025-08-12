@@ -7,6 +7,8 @@ import BatchProductForm from '@/components/forms/BatchProductForm';
 import BatchResultTable from '@/components/ui/BatchResultTable';
 import BatchProductsResultTable from '@/components/ui/BatchProductsResultTable';
 import VisualizationSection from '@/components/chart/VisualizationSection';
+import BatchPlotlyVisualization from '@/components/chart/BatchPlotlyVisualization';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const BatchCalculator: FC = () => {
   const {
@@ -89,7 +91,21 @@ const BatchCalculator: FC = () => {
       )}
 
       <div className="mb-12">
-        <VisualizationSection />
+        <h2 className="text-2xl font-semibold mb-4">Batch Visualization</h2>
+        <Tabs defaultValue="standard">
+          <TabsList className="mb-4">
+            <TabsTrigger value="standard">Standard View</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced Plotly</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="standard">
+            <VisualizationSection />
+          </TabsContent>
+          
+          <TabsContent value="advanced">
+            <BatchPlotlyVisualization />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

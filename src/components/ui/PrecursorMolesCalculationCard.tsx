@@ -62,7 +62,7 @@ export default function PrecursorMolesCalculationCard() {
               id="precursor-moles"
               type="number"
               value={precursorMoles}
-              onChange={(e) => setPrecursorMoles(Number(e.target.value) || 1)}
+              onChange={(e) => setPrecursorMoles(Number(e.target.value.replace(',', '.')) || 1)}
               min={1}
               step={1}
             />

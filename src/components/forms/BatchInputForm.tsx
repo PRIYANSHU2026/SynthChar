@@ -115,7 +115,7 @@ const ComponentCard: FC<ComponentCardProps> = ({
               <Input
                 type="number"
                 placeholder="Matrix (%)"
-                value={matrix || ''}
+                value={matrix ? (Math.round(matrix * 100) / 100) : ''}
                 min={0}
                 max={100}
                 step={0.01}
@@ -269,7 +269,7 @@ const BatchInputForm: FC = () => {
           min={0.1}
           max={10000}
           value={desiredBatch}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setDesiredBatch(Number(e.target.value))}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setDesiredBatch(Number(e.target.value.replace(',', '.')))}
           className="w-full md:w-48"
         />
       </div>

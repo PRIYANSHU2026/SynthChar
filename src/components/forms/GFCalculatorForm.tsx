@@ -55,7 +55,7 @@ const GFCalculatorForm: FC = () => {
                 type="number"
                 min={1}
                 value={precursorMoles}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setPrecursorMoles(Number(e.target.value))}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setPrecursorMoles(Number(e.target.value.replace(',', '.')))}
               />
             </div>
 
@@ -87,7 +87,7 @@ const GFCalculatorForm: FC = () => {
                 type="number"
                 min={1}
                 value={productMoles}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setProductMoles(Number(e.target.value))}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setProductMoles(Number(e.target.value.replace(',', '.')))}
               />
             </div>
 
