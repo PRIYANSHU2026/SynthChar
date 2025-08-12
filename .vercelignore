@@ -1,0 +1,12 @@
+# Netlify specific files
+netlify.toml
+netlify/
+netlify-deploy.zip
+netlify-deploy-fixed.zip
+_redirects
+prepare-netlify.sh
+
+# Other files to ignore
+node_modules
+.next
+out

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
+    "vercel-build": "next build",
     "netlify-build": "npm install --legacy-peer-deps && next build",
     "export": "next export",
     "deploy": "npm run build && npm run export",

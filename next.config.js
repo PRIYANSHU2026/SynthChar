@@ -15,6 +15,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   poweredByHeader: false,
+  output: 'standalone',
 };
 
 module.exports = nextConfig;
