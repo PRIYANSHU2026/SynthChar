@@ -1,0 +1,12 @@
+{
+  "name": "netlify-plugin-optimize-build",
+  "version": "1.0.0",
+  "description": "Custom Netlify build plugin to optimize the build process",
+  "main": "index.js",
+  "keywords": [
+    "netlify",
+    "netlify-plugin"
+  ],
+  "author": "",
+  "license": "MIT"
+}
