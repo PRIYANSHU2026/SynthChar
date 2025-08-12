@@ -27,6 +27,7 @@ const BatchPlotlyVisualization: FC = () => {
     if (generatePdf) {
       try {
         await generatePdf({
+          title: 'Batch Calculation Report',
           elementComposition,
           compResults,
           weightPercents,
