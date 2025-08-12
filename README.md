@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SynthChar - Glass Batch Calculator and Visualization Tool
 
-## Getting Started
+## Overview
+SynthChar is a comprehensive web application for glass batch calculations and advanced visualizations. It helps researchers and glass manufacturers formulate and analyze glass compositions with interactive tools.
 
-First, run the development server:
+## Features
+- Batch Calculator: Calculate precise glass formulations
+- Advanced Visualization: Interactive 2D and 3D visualizations
+- Composition Charts: Bar, pie, and radar charts
+- Ternary Plots: Visualize three-component relationships
+- 3D Structure Viewer: Explore glass atomic structures
+- Property Maps: Analyze composition-property relationships
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Deployment on Netlify
+
+### Automatic Deployment
+1. Fork or clone this repository
+2. Log in to [Netlify](https://app.netlify.com/)
+3. Click "New site from Git"
+4. Select your repository
+5. Use the following build settings:
+   - Build command: `npm run netlify-build`
+   - Publish directory: `out`
+6. Click "Deploy site"
+
+### Manual Deployment
+1. Install dependencies:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+2. Build the project:
+   ```bash
+   npm run build
+   ```
+
+3. Deploy to Netlify using the Netlify CLI:
+   ```bash
+   npm install -g netlify-cli
+   netlify deploy --prod
+   ```
+
+## Environment Variables
+Create a `.env.local` file in the root directory with the following variables if needed:
+
+```
+# Add any required environment variables here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install dependencies:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-## Learn More
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
+- `/src/app`: Next.js app router pages
+- `/src/components`: React components
+- `/src/contexts`: React context providers
+- `/src/lib`: Utility functions
+- `/src/types`: TypeScript type definitions
+- `/public`: Static assets
+- `/netlify`: Netlify configuration files
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technologies Used
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Three.js for 3D visualization
+- Recharts for data visualization
+- Netlify for deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.

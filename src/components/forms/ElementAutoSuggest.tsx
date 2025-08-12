@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FC, type InputHTMLAttributes, useEffect } from 'react';
+import { useState, useRef, type FC, type InputHTMLAttributes, useEffect, RefObject } from 'react';
 import type { AtomicMass } from '@/types';
 
 interface ElementAutoSuggestProps {
@@ -8,30 +8,47 @@ interface ElementAutoSuggestProps {
   onChange: (val: string) => void;
   atomics: AtomicMass[];
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
+  inputRef?: RefObject<HTMLInputElement>;
 }
 
-const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atomics, inputProps }) => {
+const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atomics, inputProps, inputRef }) => {
   const [focused, setFocused] = useState(false);
   const [highlight, setHighlight] = useState(-1);
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  
+  // Use provided ref or internal ref
+  const effectiveInputRef = inputRef || internalInputRef;
 
   const val = value || "";
   const trimmed = val.trim();
 
-  // Modified to make suggestions less aggressive - only suggest if a single letter is entered
+  // Extract the last token that could be an element symbol
   const lastToken = trimmed.match(/[A-Z][a-z]*$/)?.[0] ?? "";
 
   // Only show suggestions if the user is specifically looking for element suggestions
   // by starting with a capital letter
   const showSuggestions = lastToken.length > 0 && /^[A-Z]/.test(lastToken);
 
+  // Memoize suggestions for better performance
   const suggestions = (showSuggestions && atomics.length > 0)
     ? atomics
-        .filter(a =>
-          a.Symbol.toLowerCase().startsWith(lastToken.toLowerCase()) ||
-          a.Element?.toLowerCase().startsWith(lastToken.toLowerCase())
-        )
+        .filter(a => {
+          // Prioritize exact symbol matches first
+          const symbolMatch = a.Symbol.toLowerCase().startsWith(lastToken.toLowerCase());
+          const elementMatch = a.Element?.toLowerCase().startsWith(lastToken.toLowerCase());
+          return symbolMatch || elementMatch;
+        })
+        .sort((a, b) => {
+          // Sort exact matches first
+          const aExact = a.Symbol.toLowerCase() === lastToken.toLowerCase();
+          const bExact = b.Symbol.toLowerCase() === lastToken.toLowerCase();
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+          
+          // Then sort by symbol length (shorter first)
+          return a.Symbol.length - b.Symbol.length;
+        })
         .slice(0, 10) // max 10 suggestions
     : [];
 
@@ -45,8 +62,29 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
     }
   }, [highlight]);
 
-  // Handle keyboard navigation in dropdown
+  // Handle keyboard navigation in dropdown - optimized for better typing experience
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle custom onKeyDown from inputProps first
+    if (inputProps?.onKeyDown) {
+      // Clone the event to prevent issues with synthetic events
+      const event = { ...e };
+      
+      // Only if suggestions are shown and Enter is pressed with a highlight,
+      // we handle it here and don't propagate
+      if (suggestions.length > 0 && e.key === "Enter" && highlight >= 0) {
+        e.preventDefault();
+        pick(highlight);
+        return;
+      }
+      
+      // Otherwise, call the custom handler
+      inputProps.onKeyDown(event as React.KeyboardEvent<HTMLInputElement>);
+      
+      // If the event was prevented by the custom handler, don't continue
+      if (event.defaultPrevented) return;
+    }
+    
+    // Only handle dropdown navigation if we have suggestions
     if (!suggestions.length) return;
 
     if (e.key === "ArrowDown") {
@@ -60,7 +98,7 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
       pick(highlight);
     } else if (e.key === "Escape") {
       setFocused(false);
-      inputRef.current?.blur();
+      effectiveInputRef.current?.blur();
     }
   };
 
@@ -76,42 +114,68 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
       newVal = suggestions[idx].Symbol;
     }
 
-    onChange(newVal);
-    // Keep focus so user can continue typing
-    setHighlight(-1);
-
     // Save current selection position for cursor restoration
-    const selectionStart = inputRef.current?.selectionStart || 0;
-    const selectionEnd = inputRef.current?.selectionEnd || 0;
-
+    const selectionStart = effectiveInputRef.current?.selectionStart || 0;
+    
     // Determine new cursor position after suggestion
     const positionAdjustment = suggestions[idx].Symbol.length - lastToken.length;
     const newPosition = selectionStart + positionAdjustment;
-
-    // Don't close the dropdown automatically to allow further element selections
-    if (inputRef.current) {
-      inputRef.current.focus();
-
-      // Restore cursor position after React updates the DOM
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.setSelectionRange(newPosition, newPosition);
-        }
-      }, 0);
+    
+    // Keep focus state active to prevent dropdown from closing
+    setFocused(true);
+    
+    // Ensure focus is maintained before updating value
+    if (document.activeElement !== effectiveInputRef.current) {
+      effectiveInputRef.current?.focus();
     }
+    
+    // Update value and reset highlight
+    onChange(newVal);
+    setHighlight(-1);
+
+    // Use a more efficient approach for cursor position restoration
+    // that minimizes focus loss during rapid typing or selection
+    queueMicrotask(() => {
+      if (effectiveInputRef.current) {
+        // Ensure input is focused
+        if (document.activeElement !== effectiveInputRef.current) {
+          effectiveInputRef.current.focus();
+        }
+        
+        // Set cursor position
+        effectiveInputRef.current.setSelectionRange(newPosition, newPosition);
+        
+        // Use requestAnimationFrame for UI updates that need to happen after the next paint
+        requestAnimationFrame(() => {
+          // Final focus check to ensure we maintain focus
+          if (document.activeElement !== effectiveInputRef.current) {
+            effectiveInputRef.current?.focus();
+          }
+        });
+      }
+    });
   };
 
   // Hide dropdown if unfocused
   const onBlur = () => {
-    // Small delay to allow click on suggestion to register
-    setTimeout(() => setFocused(false), 120);
+    // Increased delay to allow click on suggestion to register
+    setTimeout(() => {
+      // Only unfocus if we're not trying to interact with the component
+      if (document.activeElement !== effectiveInputRef.current && 
+          !listRef.current?.contains(document.activeElement as Node)) {
+        setFocused(false);
+      } else {
+        // Try to refocus if needed
+        effectiveInputRef.current?.focus();
+      }
+    }, 300);
   };
 
   return (
     <div className="relative w-full">
       <input
         {...inputProps}
-        ref={inputRef}
+        ref={effectiveInputRef}
         className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background
                     file:border-0 file:bg-transparent file:text-sm file:font-medium
                     placeholder:text-muted-foreground focus-visible:outline-none
@@ -122,15 +186,33 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
         onBlur={onBlur}
         onChange={e => {
           const cursorPosition = e.target.selectionStart;
-          onChange(e.target.value);
+          const newValue = e.target.value;
+          
+          // Keep focus state active during typing
+          setFocused(true);
+          
+          // Update value and reset highlight immediately for responsive typing
+          onChange(newValue);
           setHighlight(-1);
 
-          // Restore cursor position after React updates the DOM
-          setTimeout(() => {
-            if (inputRef.current && cursorPosition !== null) {
-              inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-            }
-          }, 0);
+          // Use a more optimized approach for cursor position restoration
+          if (cursorPosition !== null) {
+            // Ensure we maintain focus during typing with minimal delay
+            // This prevents focus loss during rapid typing
+            requestAnimationFrame(() => {
+              if (effectiveInputRef.current) {
+                effectiveInputRef.current.focus();
+                effectiveInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                
+                // Use a microtask for better performance than setTimeout
+                queueMicrotask(() => {
+                  if (document.activeElement !== effectiveInputRef.current) {
+                    effectiveInputRef.current?.focus();
+                  }
+                });
+              }
+            });
+          }
         }}
         onKeyDown={onKeyDown}
         autoComplete="off"

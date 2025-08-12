@@ -210,16 +210,21 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       value = val as string | number;
     }
 
-    setComponents((prev) => {
-      const updated = [...prev];
-
-      // recalculate mw if formula
-      if (field === "formula") {
-        const mw = molecularWeight(value as string, atomics) || 0;
+    // For formula field, update directly to improve typing fluidity
+    if (field === "formula") {
+      // Update component formula and mw
+      const mw = molecularWeight(value as string, atomics) || 0;
+      setComponents(prev => {
+        const updated = [...prev];
         updated[i] = { ...updated[i], formula: value as string, mw };
-
-        // Also update the corresponding product's precursor formula
-        if (i < products.length) {
+        return updated;
+      });
+      
+      // Update corresponding product's precursor formula in a separate effect
+      // This prevents focus loss during typing
+      if (i < products.length) {
+        // Use setTimeout with a longer delay to ensure focus is maintained
+        setTimeout(() => {
           setProducts(prevProducts => {
             const updatedProducts = [...prevProducts];
             updatedProducts[i] = {
@@ -228,16 +233,19 @@ export function BatchProvider({ children }: { children: ReactNode }) {
             };
             return updatedProducts;
           });
-        }
-      } else {
-        updated[i] = { ...updated[i], matrix: value as number };
+        }, 100);
       }
-
-      return updated;
-    });
+    } else {
+      // For matrix field, update normally
+      setComponents(prev => {
+        const updated = [...prev];
+        updated[i] = { ...updated[i], matrix: value as number };
+        return updated;
+      });
+    }
   };
 
-  // Handler for product input changes
+  // Handler for product input changes - optimized for typing performance
   const handleProductChange = (
     i: number,
     field: "formula" | "precursorFormula" | "precursorMoles" | "productMoles"
@@ -254,34 +262,74 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       value = val as string | number;
     }
 
-    setProducts((prev) => {
-      const updated = [...prev];
-
-      if (field === "formula") {
-        const mw = molecularWeight(value as string, atomics) || 0;
+    // For formula field, use a more optimized approach to prevent typing lag
+    if (field === "formula") {
+      // Update formula and mw immediately for responsive typing
+      const mw = molecularWeight(value as string, atomics) || 0;
+      
+      // Use functional updates to ensure we're working with the latest state
+      setProducts(prev => {
+        const updated = [...prev];
         updated[i] = { ...updated[i], formula: value as string, mw };
-      } else if (field === "precursorFormula") {
-        updated[i] = { ...updated[i], precursorFormula: value as string };
-      } else if (field === "precursorMoles") {
-        updated[i] = { ...updated[i], precursorMoles: value as number };
-      } else if (field === "productMoles") {
-        updated[i] = { ...updated[i], productMoles: value as number };
-      }
-
-      // Calculate GF for this product if all values are present
-      if (updated[i].precursorFormula && updated[i].formula) {
-        const calculatedGF = calculateGF(
-          updated[i].precursorFormula,
-          updated[i].formula,
-          updated[i].precursorMoles,
-          updated[i].productMoles,
-          atomics
-        );
-        updated[i] = { ...updated[i], gf: calculatedGF };
-      }
-
-      return updated;
-    });
+        return updated;
+      });
+      
+      // Use requestAnimationFrame for smoother UI updates
+      // and setTimeout with a longer delay for calculations that might affect focus
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setProducts(prev => {
+            // Only calculate GF if we have all the necessary values
+            if (!prev[i]?.precursorFormula || !prev[i]?.formula) return prev;
+            
+            const updated = [...prev];
+            const calculatedGF = calculateGF(
+              updated[i].precursorFormula,
+              updated[i].formula,
+              updated[i].precursorMoles,
+              updated[i].productMoles,
+              atomics
+            );
+            
+            // Only update if GF has changed to avoid unnecessary re-renders
+            if (calculatedGF !== updated[i].gf) {
+              updated[i] = { ...updated[i], gf: calculatedGF };
+              return updated;
+            }
+            
+            return prev; // No change needed
+          });
+        }, 300); // Increased timeout for better typing experience
+      });
+    } else {
+      // For other fields, optimize updates
+      setProducts(prev => {
+        const updated = [...prev];
+        
+        // Update the specific field
+        if (field === "precursorFormula") {
+          updated[i] = { ...updated[i], precursorFormula: value as string };
+        } else if (field === "precursorMoles") {
+          updated[i] = { ...updated[i], precursorMoles: value as number };
+        } else if (field === "productMoles") {
+          updated[i] = { ...updated[i], productMoles: value as number };
+        }
+        
+        // Calculate GF only if we have all required values
+        if (updated[i].precursorFormula && updated[i].formula) {
+          const calculatedGF = calculateGF(
+            updated[i].precursorFormula,
+            updated[i].formula,
+            updated[i].precursorMoles,
+            updated[i].productMoles,
+            atomics
+          );
+          updated[i] = { ...updated[i], gf: calculatedGF };
+        }
+        
+        return updated;
+      });
+    }
   };
 
   // Matrix normalization
