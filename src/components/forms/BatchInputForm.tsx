@@ -102,11 +102,11 @@ const ComponentCard: FC<ComponentCardProps> = ({
                 value={formula}
                 onChange={handleFormulaChange}
                 atomics={useBatch().atomics}
+                inputRef={formulaInputRef}
                 inputProps={{
                   placeholder: "Chemical Formula (e.g. CaO)",
                   className: "w-full",
-                  onKeyDown: handleFormulaKeyDown,
-                  ref: formulaInputRef
+                  onKeyDown: handleFormulaKeyDown
                 }}
               />
             </div>
@@ -241,7 +241,9 @@ const BatchInputForm: FC = () => {
           {components.map((comp, i) => (
             <div 
               key={`comp-${i}`} 
-              ref={el => componentRefs.current[i] = el}
+              ref={(el: HTMLDivElement | null) => {
+                componentRefs.current[i] = el;
+              }}
             >
               <ComponentCard
                 index={i}
